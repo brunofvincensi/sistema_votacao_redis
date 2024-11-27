@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sistema de Votação</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Sistema de Votação</h1>
+    
+    <div id="votacao">
+        {% for categoria in categorias %}
+        <div>
+            <h2>{{ categoria }}</h2>
+            <button onclick="votar('{{ categoria }}')">Votar</button>
+            <span id="votos-{{ categoria }}">{{ votos[categoria] }}</span> votos
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="ranking">
+        <h2>Ranking em Tempo Real</h2>
+        <ul id="ranking-lista"></ul>
+    </div>
+
+    <script>
+        const socket = io();
+
+        function votar(categoria) {
+            const params = new URLSearchParams();
+            params.append('categoria', categoria);
+
+            axios.post('/votar', params, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(response => {
+                console.log('Voto registrado com sucesso!');
+            }).catch(error => {
+                console.error('Erro ao votar:', error);
+            });
+        }
+
+        // Receber atualizações do ranking em tempo real
+        socket.on('atualizar_ranking', function(votos) {
+            const rankingLista = document.getElementById('ranking-lista');
+            rankingLista.innerHTML = '';
+
+            for (const [categoria, voto] of Object.entries(votos)) {
+                // Atualizar lista de ranking
+                const li = document.createElement('li');
+                li.textContent = `${categoria}: ${voto} votos`;
+                rankingLista.appendChild(li);
+
+                // Atualizar contagem de votos na tela
+                const votoSpan = document.getElementById(`votos-${categoria}`);
+                if (votoSpan) {
+                    votoSpan.textContent = voto;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
